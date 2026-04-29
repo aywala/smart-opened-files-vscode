@@ -1,0 +1,87 @@
+name: Package and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v0.1.0)'
+        required: true
+      release_name:
+        description: 'Release name (defaults to tag if omitted)'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: 'Create as draft release'
+        required: false
+        type: boolean
+        default: false
+      generate_release_notes:
+        description: 'Auto-generate release notes'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (if build script exists)
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"; then
+            npm run build
+          else
+            echo "No build script found, skipping."
+          fi
+
+      - name: Determine VSIX filename
+        id: vsix
+        run: |
+          EXT_NAME=$(node -e "console.log(require('./package.json').name)")
+          EXT_VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "filename=${EXT_NAME}-${EXT_VERSION}.vsix" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        run: npx @vscode/vsce package --out "${{ steps.vsix.outputs.filename }}"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ inputs.tag }}
+          release_name: ${{ inputs.release_name != '' && inputs.release_name || inputs.tag }}
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: ${{ inputs.generate_release_notes }}
+
+      - name: Upload VSIX as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.vsix.outputs.filename }}
+          asset_name: ${{ steps.vsix.outputs.filename }}
+          asset_content_type: application/octet-stream
