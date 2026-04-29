@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- Background gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDF6EC"/>
+      <stop offset="100%" stop-color="#F0D9B5"/>
+    </radialGradient>
+    <!-- Head gradient -->
+    <radialGradient id="headGrad" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#F4A832"/>
+      <stop offset="100%" stop-color="#C97A18"/>
+    </radialGradient>
+    <!-- Ear gradient -->
+    <radialGradient id="earGrad" cx="50%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#D98820"/>
+      <stop offset="100%" stop-color="#B06A10"/>
+    </radialGradient>
+    <!-- Muzzle gradient -->
+    <radialGradient id="muzzleGrad" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#FFF3E0"/>
+      <stop offset="100%" stop-color="#F2D8B0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Rounded background -->
+  <rect width="128" height="128" rx="22" ry="22" fill="url(#bgGrad)"/>
+
+  <!-- ── Ears ── -->
+  <!-- Left ear outer -->
+  <polygon points="18,62 34,10 58,50" fill="url(#earGrad)"/>
+  <!-- Left ear inner -->
+  <polygon points="26,58 35,20 52,50" fill="#F5B8A0" opacity="0.85"/>
+
+  <!-- Right ear outer -->
+  <polygon points="110,62 94,10 70,50" fill="url(#earGrad)"/>
+  <!-- Right ear inner -->
+  <polygon points="102,58 93,20 76,50" fill="#F5B8A0" opacity="0.85"/>
+
+  <!-- ── Head ── -->
+  <ellipse cx="64" cy="74" rx="47" ry="50" fill="url(#headGrad)"/>
+
+  <!-- Forehead darker band -->
+  <ellipse cx="64" cy="52" rx="36" ry="22" fill="#D98820" opacity="0.45"/>
+
+  <!-- ── White eyebrow dots (characteristic Shiba markings) ── -->
+  <ellipse cx="45" cy="54" rx="6" ry="4" fill="#FFF3E0" opacity="0.9"/>
+  <ellipse cx="83" cy="54" rx="6" ry="4" fill="#FFF3E0" opacity="0.9"/>
+
+  <!-- ── White cheek patches ── -->
+  <ellipse cx="32" cy="84" rx="14" ry="16" fill="url(#muzzleGrad)" opacity="0.9"/>
+  <ellipse cx="96" cy="84" rx="14" ry="16" fill="url(#muzzleGrad)" opacity="0.9"/>
+
+  <!-- ── Muzzle ── -->
+  <ellipse cx="64" cy="92" rx="24" ry="20" fill="url(#muzzleGrad)"/>
+
+  <!-- ── Eyes ── -->
+  <!-- Left eye shadow -->
+  <ellipse cx="45" cy="68" rx="11" ry="12" fill="#1C1008" opacity="0.15"/>
+  <!-- Left eye base -->
+  <ellipse cx="45" cy="68" rx="9.5" ry="10.5" fill="#231208"/>
+  <!-- Left iris -->
+  <ellipse cx="45" cy="69" rx="6.5" ry="7" fill="#3A1F0A"/>
+  <!-- Left eye highlight large -->
+  <circle cx="48" cy="64" r="3.2" fill="white" opacity="0.92"/>
+  <!-- Left eye highlight small -->
+  <circle cx="42" cy="70" r="1.4" fill="white" opacity="0.55"/>
+
+  <!-- Right eye shadow -->
+  <ellipse cx="83" cy="68" rx="11" ry="12" fill="#1C1008" opacity="0.15"/>
+  <!-- Right eye base -->
+  <ellipse cx="83" cy="68" rx="9.5" ry="10.5" fill="#231208"/>
+  <!-- Right iris -->
+  <ellipse cx="83" cy="69" rx="6.5" ry="7" fill="#3A1F0A"/>
+  <!-- Right eye highlight large -->
+  <circle cx="86" cy="64" r="3.2" fill="white" opacity="0.92"/>
+  <!-- Right eye highlight small -->
+  <circle cx="80" cy="70" r="1.4" fill="white" opacity="0.55"/>
+
+  <!-- ── Nose ── -->
+  <ellipse cx="64" cy="85" rx="9" ry="7" fill="#1C1008"/>
+  <!-- Nose highlight -->
+  <ellipse cx="60" cy="82.5" rx="3" ry="1.8" fill="#4A2020" opacity="0.6"/>
+  <!-- Nose top sheen -->
+  <ellipse cx="64" cy="82" rx="4.5" ry="1.5" fill="white" opacity="0.12"/>
+
+  <!-- ── Mouth ── -->
+  <path d="M 56 92 Q 64 100 72 92" stroke="#1C1008" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+  <!-- ── Tongue (subtle) ── -->
+  <ellipse cx="64" cy="100" rx="7" ry="5" fill="#E87070" opacity="0.75"/>
+  <line x1="64" y1="96" x2="64" y2="105" stroke="#C45050" stroke-width="1.2" opacity="0.5"/>
+</svg>

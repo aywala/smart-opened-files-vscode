@@ -4,6 +4,7 @@
   "description": "Show opened files in a sidebar and organize them into groups.",
   "version": "0.0.1",
   "publisher": "local",
+  "icon": "images/icon.svg",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -22,7 +23,7 @@
         {
           "id": "smartOpenedFiles",
           "title": "Opened Files",
-          "icon": "$(files)"
+          "icon": "images/icon.svg"
         }
       ]
     },
