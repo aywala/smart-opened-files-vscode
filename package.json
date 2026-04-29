@@ -23,7 +23,7 @@
         {
           "id": "smartOpenedFiles",
           "title": "Opened Files",
-          "icon": "images/icon.svg"
+          "icon": "images/icon-activity-bar.svg"
         }
       ]
     },

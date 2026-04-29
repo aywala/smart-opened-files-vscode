@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Left ear -->
+  <polygon points="14,58 28,6 52,44" fill="#424242"/>
+  <!-- Right ear -->
+  <polygon points="86,58 72,6 48,44" fill="#424242"/>
+
+  <!-- Head -->
+  <ellipse cx="50" cy="66" rx="38" ry="34" fill="#424242"/>
+
+  <!-- Muzzle cutout (lighter) -->
+  <ellipse cx="50" cy="80" rx="20" ry="16" fill="#888"/>
+
+  <!-- Left eye white -->
+  <ellipse cx="35" cy="60" rx="8" ry="8.5" fill="white"/>
+  <!-- Left pupil -->
+  <ellipse cx="35" cy="61" rx="5" ry="5.5" fill="#424242"/>
+  <!-- Left eye highlight -->
+  <circle cx="37.5" cy="57.5" r="2" fill="white"/>
+
+  <!-- Right eye white -->
+  <ellipse cx="65" cy="60" rx="8" ry="8.5" fill="white"/>
+  <!-- Right pupil -->
+  <ellipse cx="65" cy="61" rx="5" ry="5.5" fill="#424242"/>
+  <!-- Right eye highlight -->
+  <circle cx="67.5" cy="57.5" r="2" fill="white"/>
+
+  <!-- Nose -->
+  <ellipse cx="50" cy="75" rx="7.5" ry="5.5" fill="#424242"/>
+
+  <!-- Eyebrow dots -->
+  <ellipse cx="34" cy="49" rx="5" ry="3" fill="#888" opacity="0.7"/>
+  <ellipse cx="66" cy="49" rx="5" ry="3" fill="#888" opacity="0.7"/>
+</svg>
