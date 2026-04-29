@@ -4,7 +4,7 @@
   "description": "Show opened files in a sidebar and organize them into groups.",
   "version": "0.0.1",
   "publisher": "local",
-  "icon": "images/icon.svg",
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },

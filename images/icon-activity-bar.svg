@@ -1,33 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <!--
-    VS Code uses this SVG as a CSS mask-image: only the alpha channel matters.
-    Opaque pixels  → theme colour (visible)
-    Transparent    → invisible (background shows through)
-
-    Strategy: one compound path with fill-rule="evenodd".
-    The outer head+ears shape is drawn first (clockwise),
-    then the eye ellipses are sub-paths (counter-clockwise).
-    Because evenodd counts boundary crossings, the eye regions
-    (enclosed twice) become transparent holes — visible as "eyes"
-    against whatever background colour VS Code paints behind the icon.
-  -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true">
   <path
-    fill="#424242"
+    fill="currentColor"
     fill-rule="evenodd"
     d="
-      M 28,5
-      L 10,55
-      C 6,63 6,72 6,74
-      C 6,90 26,97 50,97
-      C 74,97 94,90 94,74
-      C 94,72 94,63 90,55
-      L 72,5
-      L 61,36
-      C 58,34 54,33 50,33
-      C 46,33 42,34 39,36
+      M 23,20
+      C 24,11 29,5 35,5
+      C 40,5 43,11 44,17
+      C 47,16.4 53,16.4 56,17
+      C 57,11 60,5 65,5
+      C 71,5 76,11 77,20
+      C 85,27 90,37 92,49
+      C 94,59 92,70 87,79
+      C 80,91 67,97 50,97
+      C 33,97 20,91 13,79
+      C 8,70 6,59 8,49
+      C 10,37 15,27 23,20
       Z
-      M 41,62 A 8.5,9.5 0 1,0 24.001,62 A 8.5,9.5 0 1,0 41,62 Z
-      M 76,62 A 8.5,9.5 0 1,0 59.001,62 A 8.5,9.5 0 1,0 76,62 Z
+
+      M 27,22
+      C 29,15 33,11 37,11
+      C 40,11 42,15 42,21
+      C 38,23 34,24 27,22
+      Z
+
+      M 73,22
+      C 71,15 67,11 63,11
+      C 60,11 58,15 58,21
+      C 62,23 66,24 73,22
+      Z
+
+      M 24,57
+      C 29,52 36,52 42,61
+      C 39,66 30,67 24,57
+      Z
+
+      M 76,57
+      C 71,52 64,52 58,61
+      C 61,66 70,67 76,57
+      Z
+
+      M 67,83
+      A 17,13 0 1 0 33.001,83
+      A 17,13 0 1 0 67,83
+      Z
+
+      M 56,77
+      A 6,4.5 0 1 0 44.001,77
+      A 6,4.5 0 1 0 56,77
+      Z
     "
   />
 </svg>
+
