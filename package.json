@@ -74,19 +74,30 @@
         "command": "smartOpenedFiles.closeFile",
         "title": "Close File",
         "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.autoGroup",
+        "title": "Auto Group by Path",
+        "category": "Opened Files",
+        "icon": "$(list-tree)"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "smartOpenedFiles.createGroup",
+          "command": "smartOpenedFiles.autoGroup",
           "when": "view == smartOpenedFilesView",
           "group": "navigation@1"
         },
         {
-          "command": "smartOpenedFiles.refresh",
+          "command": "smartOpenedFiles.createGroup",
           "when": "view == smartOpenedFilesView",
           "group": "navigation@2"
+        },
+        {
+          "command": "smartOpenedFiles.refresh",
+          "when": "view == smartOpenedFilesView",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [

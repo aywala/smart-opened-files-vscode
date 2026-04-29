@@ -2,10 +2,14 @@ import * as vscode from 'vscode';
 
 const STATE_KEY = 'smartOpenedFiles.state.v1';
 
+export const HISTORY_GROUP_ID = '__history__';
+const HISTORY_GROUP_NAME = 'History';
+
 export interface GroupRecord {
   id: string;
   name: string;
   files: string[];
+  isSystem?: boolean;
 }
 
 export interface PersistedState {
@@ -33,7 +37,8 @@ export class GroupStateStore {
     const groups = (raw.groups ?? []).map((group) => ({
       id: group.id,
       name: group.name,
-      files: dedupe(group.files ?? [])
+      files: dedupe(group.files ?? []),
+      isSystem: group.isSystem
     }));
 
     const groupedFiles = new Set(groups.flatMap((group) => group.files));
@@ -47,7 +52,8 @@ export class GroupStateStore {
       groups: this.state.groups.map((group) => ({
         id: group.id,
         name: group.name,
-        files: [...group.files]
+        files: [...group.files],
+        isSystem: group.isSystem
       })),
       ungrouped: [...this.state.ungrouped]
     };
@@ -107,7 +113,7 @@ export class GroupStateStore {
 
   public renameGroup(groupId: string, name: string): boolean {
     const group = this.state.groups.find((entry) => entry.id === groupId);
-    if (!group) {
+    if (!group || group.isSystem) {
       return false;
     }
 
@@ -118,6 +124,10 @@ export class GroupStateStore {
   public deleteGroup(groupId: string): boolean {
     const index = this.state.groups.findIndex((entry) => entry.id === groupId);
     if (index < 0) {
+      return false;
+    }
+
+    if (this.state.groups[index].isSystem) {
       return false;
     }
 
@@ -162,5 +172,111 @@ export class GroupStateStore {
     for (const group of this.state.groups) {
       group.files = group.files.filter((file) => file !== uri);
     }
+  }
+
+  // ─── History group ────────────────────────────────────────────────────────────
+
+  private ensureHistoryGroup(): GroupRecord {
+    let history = this.state.groups.find((g) => g.id === HISTORY_GROUP_ID);
+    if (!history) {
+      history = { id: HISTORY_GROUP_ID, name: HISTORY_GROUP_NAME, files: [], isSystem: true };
+      this.state.groups.push(history);
+    }
+    return history;
+  }
+
+  public moveToHistory(uri: string): void {
+    const history = this.ensureHistoryGroup();
+    if (history.files.includes(uri)) {
+      return;
+    }
+    this.removeFileEverywhere(uri);
+    history.files.push(uri);
+  }
+
+  // ─── Auto-grouping by path ─────────────────────────────────────────────────────
+
+  public autoGroupByPath(): void {
+    // Collect all non-history tracked files
+    const allFiles = [
+      ...this.state.ungrouped,
+      ...this.state.groups
+        .filter((g) => g.id !== HISTORY_GROUP_ID)
+        .flatMap((g) => g.files)
+    ];
+
+    // Remove all non-system groups and clear ungrouped
+    this.state.groups = this.state.groups.filter((g) => g.isSystem);
+    this.state.ungrouped = [];
+
+    if (allFiles.length === 0) {
+      return;
+    }
+
+    const multiRoot = (vscode.workspace.workspaceFolders?.length ?? 0) > 1;
+
+    // First pass: assign each file to its first-level subfolder key
+    const firstLevelMap = new Map<string, string[]>();
+    const ungroupedFiles: string[] = [];
+
+    for (const uriString of allFiles) {
+      const uri = vscode.Uri.parse(uriString);
+      const folder = vscode.workspace.getWorkspaceFolder(uri);
+
+      if (!folder) {
+        ungroupedFiles.push(uriString);
+        continue;
+      }
+
+      const rel = vscode.workspace.asRelativePath(uri, false);
+      const parts = rel.split('/');
+
+      const key =
+        parts.length <= 1
+          ? multiRoot ? folder.name : '(root)'
+          : multiRoot ? `${folder.name}/${parts[0]}` : parts[0];
+
+      const bucket = firstLevelMap.get(key) ?? [];
+      bucket.push(uriString);
+      firstLevelMap.set(key, bucket);
+    }
+
+    // Second pass: if a first-level group has > 10 files, split by second-level subfolder
+    const finalGroupMap = new Map<string, string[]>();
+
+    for (const [groupKey, files] of firstLevelMap) {
+      if (files.length > 10) {
+        for (const uriString of files) {
+          const uri = vscode.Uri.parse(uriString);
+          const folder = vscode.workspace.getWorkspaceFolder(uri)!;
+          const rel = vscode.workspace.asRelativePath(uri, false);
+          const parts = rel.split('/');
+
+          const subKey =
+            parts.length <= 2
+              ? groupKey
+              : multiRoot
+                ? `${folder.name}/${parts[0]}/${parts[1]}`
+                : `${parts[0]}/${parts[1]}`;
+
+          const bucket = finalGroupMap.get(subKey) ?? [];
+          bucket.push(uriString);
+          finalGroupMap.set(subKey, bucket);
+        }
+      } else {
+        const bucket = finalGroupMap.get(groupKey) ?? [];
+        bucket.push(...files);
+        finalGroupMap.set(groupKey, bucket);
+      }
+    }
+
+    // Create new groups from the computed map
+    for (const [name, files] of finalGroupMap) {
+      const created = this.createGroup(name);
+      const ref = this.state.groups.find((g) => g.id === created.id)!;
+      ref.files = files;
+    }
+
+    this.state.ungrouped = ungroupedFiles;
   }
 }

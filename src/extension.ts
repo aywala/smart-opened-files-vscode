@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { FileTreeItem, GroupTreeItem, OpenedFilesProvider } from './provider';
-import { GroupStateStore } from './state';
+import { FileDragAndDropController, FileTreeItem, GroupTreeItem, OpenedFilesProvider } from './provider';
+import { GroupStateStore, HISTORY_GROUP_ID } from './state';
 
 function collectOpenFileUris(): Set<string> {
   const uris = new Set<string>();
@@ -22,6 +22,13 @@ async function syncFromTabs(provider: OpenedFilesProvider): Promise<void> {
   let changed = false;
 
   for (const uri of openUris) {
+    // If a History file is now open again, restore it to Ungrouped
+    const currentGroupId = provider.getStore().getFileGroupId(uri);
+    if (currentGroupId === HISTORY_GROUP_ID) {
+      provider.getStore().removeFromGroup(uri);
+      changed = true;
+    }
+
     if (provider.ensureTracked(uri)) {
       changed = true;
     }
@@ -42,9 +49,16 @@ export function activate(context: vscode.ExtensionContext): void {
   const store = new GroupStateStore(context.workspaceState);
   const provider = new OpenedFilesProvider(store);
 
+  const dndController = new FileDragAndDropController(
+    store,
+    () => provider.refresh(),
+    () => provider.persist()
+  );
+
   const view = vscode.window.createTreeView('smartOpenedFilesView', {
     treeDataProvider: provider,
-    showCollapseAll: true
+    showCollapseAll: true,
+    dragAndDropController: dndController
   });
 
   context.subscriptions.push(view);
@@ -123,7 +137,7 @@ export function activate(context: vscode.ExtensionContext): void {
       return;
     }
 
-    const groups = store.listGroups();
+    const groups = store.listGroups().filter((g) => !g.isSystem);
     if (groups.length === 0) {
       vscode.window.showInformationMessage('No group exists yet. Create a group first.');
       return;
@@ -207,9 +221,43 @@ export function activate(context: vscode.ExtensionContext): void {
     await syncFromTabs(provider);
   });
 
+  register('smartOpenedFiles.autoGroup', async () => {
+    const nonHistoryCount =
+      store.listGroups().filter((g) => !g.isSystem).reduce((acc, g) => acc + g.files.length, 0) +
+      store.listUngrouped().length;
+
+    if (nonHistoryCount === 0) {
+      vscode.window.showInformationMessage('No files to group.');
+      return;
+    }
+
+    store.autoGroupByPath();
+    await provider.persist();
+    provider.refresh();
+    vscode.window.showInformationMessage('Files grouped by path successfully.');
+  });
+
   context.subscriptions.push(
-    vscode.window.tabGroups.onDidChangeTabs(async () => {
+    vscode.window.tabGroups.onDidChangeTabs(async (event) => {
+      // Move closed files to the History group
+      let historyChanged = false;
+      for (const tab of event.closed) {
+        const input = tab.input;
+        if (input instanceof vscode.TabInputText) {
+          const uri = input.uri.toString();
+          if (store.hasFile(uri)) {
+            store.moveToHistory(uri);
+            historyChanged = true;
+          }
+        }
+      }
+
       await syncFromTabs(provider);
+
+      // Ensure history moves are persisted even when syncFromTabs detects no other changes
+      if (historyChanged) {
+        await provider.persist();
+      }
     })
   );
 

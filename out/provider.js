@@ -33,17 +33,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OpenedFilesProvider = exports.FileTreeItem = exports.UngroupedTreeItem = exports.GroupTreeItem = void 0;
+exports.FileDragAndDropController = exports.OpenedFilesProvider = exports.FileTreeItem = exports.UngroupedTreeItem = exports.GroupTreeItem = exports.TREE_MIME_TYPE = void 0;
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
+const state_1 = require("./state");
+exports.TREE_MIME_TYPE = 'application/vnd.code.tree.smartopenedfilesview';
 class GroupTreeItem extends vscode.TreeItem {
     constructor(group) {
         super(group.name, vscode.TreeItemCollapsibleState.Expanded);
         this.group = group;
-        this.contextValue = 'smartOpenedFiles.group';
+        if (group.isSystem) {
+            this.contextValue = 'smartOpenedFiles.group.system';
+            this.iconPath = new vscode.ThemeIcon('history');
+        }
+        else {
+            this.contextValue = 'smartOpenedFiles.group';
+            this.iconPath = new vscode.ThemeIcon('folder');
+        }
         this.description = `${group.files.length}`;
         this.tooltip = `${group.name} (${group.files.length})`;
-        this.iconPath = new vscode.ThemeIcon('folder');
     }
 }
 exports.GroupTreeItem = GroupTreeItem;
@@ -131,12 +139,18 @@ class OpenedFilesProvider {
     }
     getChildren(element) {
         if (!element) {
-            const groups = this.store
-                .listGroups()
+            const allGroups = this.store.listGroups();
+            // Regular groups (non-system) sorted A-Z
+            const regularGroups = allGroups
+                .filter((g) => !g.isSystem)
                 .sort((a, b) => a.name.localeCompare(b.name, 'en'))
-                .map((group) => new GroupTreeItem(group));
+                .map((g) => new GroupTreeItem(g));
+            // Ungrouped container always visible
             const ungrouped = new UngroupedTreeItem(this.store.listUngrouped().length);
-            return [...groups, ungrouped];
+            // History group at the bottom, only shown when it has files
+            const historyRecord = allGroups.find((g) => g.id === state_1.HISTORY_GROUP_ID);
+            const historyItems = historyRecord && historyRecord.files.length > 0 ? [new GroupTreeItem(historyRecord)] : [];
+            return [...regularGroups, ungrouped, ...historyItems];
         }
         if (element instanceof GroupTreeItem) {
             return this.buildFileItems(element.group.files, element.group.id);
@@ -164,4 +178,76 @@ class OpenedFilesProvider {
     }
 }
 exports.OpenedFilesProvider = OpenedFilesProvider;
+class FileDragAndDropController {
+    constructor(store, onRefresh, onPersist) {
+        this.store = store;
+        this.onRefresh = onRefresh;
+        this.onPersist = onPersist;
+        this.dragMimeTypes = [exports.TREE_MIME_TYPE];
+        this.dropMimeTypes = [exports.TREE_MIME_TYPE];
+    }
+    handleDrag(source, dataTransfer) {
+        const uris = source
+            .filter((item) => item instanceof FileTreeItem)
+            .map((item) => item.uriString);
+        if (uris.length > 0) {
+            dataTransfer.set(exports.TREE_MIME_TYPE, new vscode.DataTransferItem(uris));
+        }
+    }
+    async handleDrop(target, dataTransfer) {
+        const transferItem = dataTransfer.get(exports.TREE_MIME_TYPE);
+        if (!transferItem) {
+            return;
+        }
+        const uris = transferItem.value;
+        if (!Array.isArray(uris) || uris.length === 0) {
+            return;
+        }
+        const fileUris = uris.filter((u) => typeof u === 'string');
+        let changed = false;
+        if (target instanceof GroupTreeItem) {
+            // Block manual drops into the History system group
+            if (target.group.id === state_1.HISTORY_GROUP_ID) {
+                return;
+            }
+            for (const uri of fileUris) {
+                if (this.store.moveToGroup(uri, target.group.id)) {
+                    changed = true;
+                }
+            }
+        }
+        else if (target instanceof FileTreeItem) {
+            // Dropped onto a file: move to that file's container
+            if (target.groupId && target.groupId !== state_1.HISTORY_GROUP_ID) {
+                for (const uri of fileUris) {
+                    if (uri !== target.uriString && this.store.moveToGroup(uri, target.groupId)) {
+                        changed = true;
+                    }
+                }
+            }
+            else if (!target.groupId) {
+                // Target file is in Ungrouped
+                for (const uri of fileUris) {
+                    if (uri !== target.uriString && this.store.getFileGroupId(uri)) {
+                        this.store.removeFromGroup(uri);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        else if (target instanceof UngroupedTreeItem || target === undefined) {
+            for (const uri of fileUris) {
+                if (this.store.getFileGroupId(uri)) {
+                    this.store.removeFromGroup(uri);
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            await this.onPersist();
+            this.onRefresh();
+        }
+    }
+}
+exports.FileDragAndDropController = FileDragAndDropController;
 //# sourceMappingURL=provider.js.map

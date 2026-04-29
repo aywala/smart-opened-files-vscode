@@ -54,6 +54,12 @@ async function syncFromTabs(provider) {
     const openUris = collectOpenFileUris();
     let changed = false;
     for (const uri of openUris) {
+        // If a History file is now open again, restore it to Ungrouped
+        const currentGroupId = provider.getStore().getFileGroupId(uri);
+        if (currentGroupId === state_1.HISTORY_GROUP_ID) {
+            provider.getStore().removeFromGroup(uri);
+            changed = true;
+        }
         if (provider.ensureTracked(uri)) {
             changed = true;
         }
@@ -69,9 +75,11 @@ function normalizeGroupName(name) {
 function activate(context) {
     const store = new state_1.GroupStateStore(context.workspaceState);
     const provider = new provider_1.OpenedFilesProvider(store);
+    const dndController = new provider_1.FileDragAndDropController(store, () => provider.refresh(), () => provider.persist());
     const view = vscode.window.createTreeView('smartOpenedFilesView', {
         treeDataProvider: provider,
-        showCollapseAll: true
+        showCollapseAll: true,
+        dragAndDropController: dndController
     });
     context.subscriptions.push(view);
     const register = (command, callback) => {
@@ -130,7 +138,7 @@ function activate(context) {
         if (!item) {
             return;
         }
-        const groups = store.listGroups();
+        const groups = store.listGroups().filter((g) => !g.isSystem);
         if (groups.length === 0) {
             vscode.window.showInformationMessage('No group exists yet. Create a group first.');
             return;
@@ -198,8 +206,36 @@ function activate(context) {
         await vscode.window.tabGroups.close(tabsToClose, true);
         await syncFromTabs(provider);
     });
-    context.subscriptions.push(vscode.window.tabGroups.onDidChangeTabs(async () => {
+    register('smartOpenedFiles.autoGroup', async () => {
+        const nonHistoryCount = store.listGroups().filter((g) => !g.isSystem).reduce((acc, g) => acc + g.files.length, 0) +
+            store.listUngrouped().length;
+        if (nonHistoryCount === 0) {
+            vscode.window.showInformationMessage('No files to group.');
+            return;
+        }
+        store.autoGroupByPath();
+        await provider.persist();
+        provider.refresh();
+        vscode.window.showInformationMessage('Files grouped by path successfully.');
+    });
+    context.subscriptions.push(vscode.window.tabGroups.onDidChangeTabs(async (event) => {
+        // Move closed files to the History group
+        let historyChanged = false;
+        for (const tab of event.closed) {
+            const input = tab.input;
+            if (input instanceof vscode.TabInputText) {
+                const uri = input.uri.toString();
+                if (store.hasFile(uri)) {
+                    store.moveToHistory(uri);
+                    historyChanged = true;
+                }
+            }
+        }
         await syncFromTabs(provider);
+        // Ensure history moves are persisted even when syncFromTabs detects no other changes
+        if (historyChanged) {
+            await provider.persist();
+        }
     }));
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(async (document) => {
         if (document.uri.scheme !== 'untitled') {
