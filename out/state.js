@@ -180,6 +180,10 @@ class GroupStateStore {
         }
         this.removeFileEverywhere(uri);
         history.files.push(uri);
+        // Keep only the 10 most-recently closed files (trim oldest from the front)
+        if (history.files.length > 10) {
+            history.files = history.files.slice(history.files.length - 10);
+        }
     }
     // ─── Auto-grouping by path ─────────────────────────────────────────────────────
     autoGroupByPath() {
