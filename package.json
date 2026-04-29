@@ -1,0 +1,135 @@
+{
+  "name": "smart-opened-files",
+  "displayName": "Smart Opened Files",
+  "description": "Show opened files in a sidebar and organize them into groups.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:smartOpenedFilesView",
+    "onCommand:smartOpenedFiles.createGroup",
+    "onCommand:smartOpenedFiles.refresh"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartOpenedFiles",
+          "title": "Opened Files",
+          "icon": "$(files)"
+        }
+      ]
+    },
+    "views": {
+      "smartOpenedFiles": [
+        {
+          "id": "smartOpenedFilesView",
+          "name": "Opened Files Groups"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "smartOpenedFiles.refresh",
+        "title": "Refresh",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.createGroup",
+        "title": "Create Group",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.renameGroup",
+        "title": "Rename Group",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.deleteGroup",
+        "title": "Delete Group",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.moveFileToGroup",
+        "title": "Move File To Group",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.removeFromGroup",
+        "title": "Remove From Group",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.openFile",
+        "title": "Open File",
+        "category": "Opened Files"
+      },
+      {
+        "command": "smartOpenedFiles.closeFile",
+        "title": "Close File",
+        "category": "Opened Files"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "smartOpenedFiles.createGroup",
+          "when": "view == smartOpenedFilesView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "smartOpenedFiles.refresh",
+          "when": "view == smartOpenedFilesView",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "smartOpenedFiles.renameGroup",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.group",
+          "group": "inline@1"
+        },
+        {
+          "command": "smartOpenedFiles.deleteGroup",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.group",
+          "group": "inline@2"
+        },
+        {
+          "command": "smartOpenedFiles.moveFileToGroup",
+          "when": "view == smartOpenedFilesView && viewItem =~ /smartOpenedFiles.file.*/",
+          "group": "inline@1"
+        },
+        {
+          "command": "smartOpenedFiles.removeFromGroup",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.file.inGroup",
+          "group": "inline@2"
+        },
+        {
+          "command": "smartOpenedFiles.openFile",
+          "when": "view == smartOpenedFilesView && viewItem =~ /smartOpenedFiles.file.*/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "smartOpenedFiles.closeFile",
+          "when": "view == smartOpenedFilesView && viewItem =~ /smartOpenedFiles.file.*/",
+          "group": "navigation@2"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.5"
+  }
+}
