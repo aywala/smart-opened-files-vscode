@@ -187,6 +187,13 @@ export class GroupStateStore {
     }
   }
 
+  /** Remove all non-system groups that have no files */
+  public removeEmptyGroups(): void {
+    this.state.groups = this.state.groups.filter(
+      (g) => g.isSystem || g.files.length > 0
+    );
+  }
+
   private removeFileEverywhere(uri: string): void {
     this.state.ungrouped = this.state.ungrouped.filter((file) => file !== uri);
     for (const group of this.state.groups) {

@@ -61,6 +61,9 @@ async function syncFromTabs(provider: OpenedFilesProvider): Promise<void> {
 
   provider.updateOpenUris(openUris);
 
+  // Remove empty non-system groups
+  provider.getStore().removeEmptyGroups();
+
   if (changed) {
     await provider.persist();
   }
