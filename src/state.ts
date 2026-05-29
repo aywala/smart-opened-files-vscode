@@ -265,11 +265,14 @@ export class GroupStateStore {
       firstLevelMap.set(key, bucket);
     }
 
-    // Second pass: if a first-level group has > 10 files, split by second-level subfolder
+    // Second pass: if a first-level group has > 10 files, check if splitting is worthwhile
+    // Only split when file count >= 2.5 * second-level subfolder count
     const finalGroupMap = new Map<string, string[]>();
 
     for (const [groupKey, files] of firstLevelMap) {
       if (files.length > 10) {
+        // Count second-level subfolders first
+        const subFolderCounts = new Map<string, string[]>();
         for (const uriString of files) {
           const uri = vscode.Uri.parse(uriString);
           const folder = vscode.workspace.getWorkspaceFolder(uri)!;
@@ -283,9 +286,18 @@ export class GroupStateStore {
                 ? `${folder.name}/${parts[0]}/${parts[1]}`
                 : `${parts[0]}/${parts[1]}`;
 
-          const bucket = finalGroupMap.get(subKey) ?? [];
+          const bucket = subFolderCounts.get(subKey) ?? [];
           bucket.push(uriString);
-          finalGroupMap.set(subKey, bucket);
+          subFolderCounts.set(subKey, bucket);
+        }
+
+        // Only split if file count >= 2.5 * second-level subfolder count
+        if (files.length >= subFolderCounts.size * 2.5) {
+          for (const [subKey, subFiles] of subFolderCounts) {
+            finalGroupMap.set(subKey, subFiles);
+          }
+        } else {
+          finalGroupMap.set(groupKey, files);
         }
       } else {
         const bucket = finalGroupMap.get(groupKey) ?? [];
