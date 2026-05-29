@@ -2,7 +2,7 @@
   "name": "smart-opened-files",
   "displayName": "Smart Opened Files",
   "description": "Show opened files in a sidebar and organize them into groups.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "local",
   "icon": "images/icon.png",
   "engines": {
@@ -81,6 +81,11 @@
         "title": "Auto Group by Path",
         "category": "Opened Files",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "smartOpenedFiles.closeGroupFiles",
+        "title": "Close All Files in Group",
+        "category": "Opened Files"
       }
     ],
     "menus": {
@@ -111,6 +116,21 @@
           "command": "smartOpenedFiles.deleteGroup",
           "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.group",
           "group": "inline@2"
+        },
+        {
+          "command": "smartOpenedFiles.closeGroupFiles",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.group",
+          "group": "inline@3"
+        },
+        {
+          "command": "smartOpenedFiles.closeGroupFiles",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.group.system",
+          "group": "inline@1"
+        },
+        {
+          "command": "smartOpenedFiles.closeGroupFiles",
+          "when": "view == smartOpenedFilesView && viewItem == smartOpenedFiles.ungrouped",
+          "group": "inline@1"
         },
         {
           "command": "smartOpenedFiles.moveFileToGroup",

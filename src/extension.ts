@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FileDragAndDropController, FileTreeItem, GroupTreeItem, OpenedFilesProvider } from './provider';
+import { FileDragAndDropController, FileTreeItem, GroupTreeItem, OpenedFilesProvider, UngroupedTreeItem } from './provider';
 import { GroupStateStore, HISTORY_GROUP_ID } from './state';
 
 function collectOpenFileUris(): Set<string> {
@@ -239,6 +239,39 @@ export function activate(context: vscode.ExtensionContext): void {
 
     if (tabsToClose.length === 0) {
       vscode.window.showInformationMessage('File is already closed.');
+      return;
+    }
+
+    await vscode.window.tabGroups.close(tabsToClose, true);
+    await syncFromTabs(provider);
+  });
+
+  register('smartOpenedFiles.closeGroupFiles', async (item?: GroupTreeItem | UngroupedTreeItem) => {
+    if (!item) {
+      return;
+    }
+
+    // Collect file URIs from the group or ungrouped
+    let fileUris: Set<string>;
+    if (item instanceof UngroupedTreeItem) {
+      fileUris = new Set(store.listUngrouped());
+    } else {
+      fileUris = new Set(item.group.files);
+    }
+
+    const tabsToClose: vscode.Tab[] = [];
+
+    for (const tabGroup of vscode.window.tabGroups.all) {
+      for (const tab of tabGroup.tabs) {
+        const input = tab.input;
+        if (input instanceof vscode.TabInputText && fileUris.has(input.uri.toString())) {
+          tabsToClose.push(tab);
+        }
+      }
+    }
+
+    if (tabsToClose.length === 0) {
+      vscode.window.showInformationMessage('No open files in this group.');
       return;
     }
 

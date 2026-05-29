@@ -3,4 +3,4 @@
 src/**
 **/*.map
 **/*.ts
-node_modules/**/.bin/**
+node_modules/**
