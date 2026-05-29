@@ -167,6 +167,26 @@ export class GroupStateStore {
     return true;
   }
 
+  public getAllTrackedUris(): string[] {
+    const uris = new Set<string>();
+    for (const uri of this.state.ungrouped) {
+      uris.add(uri);
+    }
+    for (const group of this.state.groups) {
+      for (const uri of group.files) {
+        uris.add(uri);
+      }
+    }
+    return Array.from(uris);
+  }
+
+  public removeFileCompletely(uri: string): void {
+    this.state.ungrouped = this.state.ungrouped.filter((file) => file !== uri);
+    for (const group of this.state.groups) {
+      group.files = group.files.filter((file) => file !== uri);
+    }
+  }
+
   private removeFileEverywhere(uri: string): void {
     this.state.ungrouped = this.state.ungrouped.filter((file) => file !== uri);
     for (const group of this.state.groups) {

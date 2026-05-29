@@ -34,6 +34,31 @@ async function syncFromTabs(provider: OpenedFilesProvider): Promise<void> {
     }
   }
 
+  // Remove files that are no longer open and cannot be opened (deleted or inaccessible)
+  const allTracked = provider.getStore().getAllTrackedUris();
+  for (const uri of allTracked) {
+    if (openUris.has(uri)) {
+      continue;
+    }
+
+    try {
+      const parsedUri = vscode.Uri.parse(uri);
+      if (parsedUri.scheme === 'file') {
+        try {
+          await vscode.workspace.fs.stat(parsedUri);
+        } catch {
+          // File no longer exists on disk — remove it completely
+          provider.getStore().removeFileCompletely(uri);
+          changed = true;
+        }
+      }
+    } catch {
+      // Invalid URI — remove it
+      provider.getStore().removeFileCompletely(uri);
+      changed = true;
+    }
+  }
+
   provider.updateOpenUris(openUris);
 
   if (changed) {
